@@ -34,7 +34,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -91,6 +93,7 @@ button {
 .brand span,
 .home-card p,
 .project-row p,
+.project-row .project-subdetail,
 .timeline-item p,
 .vendor-card p,
 .metric-card p,
@@ -237,6 +240,38 @@ h3 {
   white-space: nowrap;
 }
 
+.secondary-button,
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.secondary-button {
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+}
+
+.text-button {
+  border: 0;
+  background: transparent;
+  color: var(--red);
+  font-weight: 800;
+  padding: 0;
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -354,11 +389,17 @@ h3 {
 }
 
 .project-row p,
+.project-row .project-subdetail,
 .timeline-item p,
 .vendor-card p {
   margin-bottom: 0;
   font-size: 0.9rem;
   line-height: 1.4;
+}
+
+.project-row .project-subdetail {
+  margin-top: 4px;
+  font-size: 0.82rem;
 }
 
 .priority {
@@ -471,6 +512,200 @@ h3 {
   font-weight: 800;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  background: rgba(27, 29, 31, 0.42);
+  padding: 24px;
+}
+
+.modal {
+  width: min(860px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 26px 80px rgba(27, 29, 31, 0.22);
+  padding: 20px;
+}
+
+.modal-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.project-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  outline: 0;
+  padding: 11px 12px;
+}
+
+.field textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(47, 107, 79, 0.14);
+}
+
+.choice-field {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.choice-field legend {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 0 0 7px;
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 82px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 13px;
+}
+
+.choice.selected {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(47, 107, 79, 0.12);
+}
+
+.choice input {
+  width: auto;
+  margin-top: 3px;
+  accent-color: var(--green);
+}
+
+.choice span,
+.choice strong,
+.choice small {
+  display: block;
+}
+
+.choice strong {
+  margin-bottom: 4px;
+}
+
+.choice small,
+.contractor-heading p,
+.empty-contractors p {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.contractor-section {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf5;
+  padding: 14px;
+}
+
+.contractor-heading,
+.contractor-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.contractor-heading h3,
+.contractor-card-heading strong {
+  margin: 0;
+}
+
+.contractor-heading p {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+}
+
+.contractor-list {
+  display: grid;
+  gap: 10px;
+}
+
+.contractor-form-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 14px;
+}
+
+.contractor-card-heading {
+  grid-column: 1 / -1;
+}
+
+.empty-contractors {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 14px;
+}
+
+.empty-contractors p {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+}
+
+.full-span {
+  grid-column: 1 / -1;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
 @media (max-width: 1120px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -549,5 +784,36 @@ h3 {
 
   .timeline-item {
     grid-template-columns: 1fr;
+  }
+
+  .modal-backdrop {
+    align-items: start;
+    padding: 14px;
+  }
+
+  .project-form {
+    grid-template-columns: 1fr;
+  }
+
+  .choice-field,
+  .contractor-form-card {
+    grid-template-columns: 1fr;
+  }
+
+  .contractor-heading {
+    flex-direction: column;
+  }
+
+  .contractor-heading .secondary-button {
+    width: 100%;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions .secondary-button,
+  .modal-actions .primary-button {
+    width: 100%;
   }
 }
