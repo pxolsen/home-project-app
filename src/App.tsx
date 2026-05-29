@@ -27,6 +27,14 @@ import { HistoryRecordModal } from "./components/HistoryRecordModal";
 import { Metric } from "./components/Metric";
 import { ProjectEditorModal } from "./components/ProjectEditorModal";
 import { ProjectContractorSummary } from "./components/ProjectContractorSummary";
+import { useAuth } from "./lib/auth";
+import {
+  deleteRemoteHistoryRecord,
+  loadRemoteAppData,
+  saveRemoteHistoryRecord,
+  saveRemoteProject,
+  type HomeRecord,
+} from "./lib/database";
 import {
   HISTORY_RECORDS_STORAGE_KEY,
   loadStoredHistoryRecords,
@@ -37,16 +45,21 @@ import {
 type ProjectFilter = "All" | "Urgent" | "Done";
 
 export default function App() {
+  const { isSupabaseConfigured, session } = useAuth();
   const [projects, setProjects] = useState<Project[]>(loadStoredProjects);
   const [historyRecords, setHistoryRecords] = useState<HistoryRecord[]>(
     loadStoredHistoryRecords,
   );
+  const [home, setHome] = useState<HomeRecord | null>(null);
+  const [isRemoteDataLoading, setIsRemoteDataLoading] = useState(false);
+  const [remoteDataError, setRemoteDataError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>("All");
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingHistoryRecordId, setEditingHistoryRecordId] = useState<string | null>(null);
+  const isRemoteMode = isSupabaseConfigured && Boolean(session);
 
   useEffect(() => {
     window.localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects));
@@ -58,6 +71,48 @@ export default function App() {
       JSON.stringify(historyRecords),
     );
   }, [historyRecords]);
+
+  useEffect(() => {
+    if (!isRemoteMode || !session) {
+      setHome(null);
+      setRemoteDataError("");
+      return;
+    }
+
+    let isMounted = true;
+
+    setIsRemoteDataLoading(true);
+    setRemoteDataError("");
+
+    loadRemoteAppData(session.user.id)
+      .then((data) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setHome(data.home);
+        setProjects(data.projects);
+        setHistoryRecords(data.historyRecords);
+      })
+      .catch((error) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setRemoteDataError(
+          error instanceof Error ? error.message : "Could not load Supabase data.",
+        );
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsRemoteDataLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isRemoteMode, session]);
 
   const totalEstimated = projects.reduce((sum, project) => sum + getProjectBudget(project), 0);
   const activeProjects = projects.filter((project) => project.status !== "Done");
@@ -85,12 +140,20 @@ export default function App() {
   );
   const hasSearch = normalizedSearch.length > 0;
 
-  function addProject(project: Project) {
+  async function addProject(project: Project) {
+    if (isRemoteMode && home && session) {
+      await saveRemoteProject({ homeId: home.id, project, userId: session.user.id });
+    }
+
     setProjects((currentProjects) => [project, ...currentProjects]);
     setIsProjectModalOpen(false);
   }
 
-  function updateProject(project: Project) {
+  async function updateProject(project: Project) {
+    if (isRemoteMode && home && session) {
+      await saveRemoteProject({ homeId: home.id, project, userId: session.user.id });
+    }
+
     setProjects((currentProjects) =>
       currentProjects.map((currentProject) =>
         currentProject.id === project.id ? project : currentProject,
@@ -99,12 +162,20 @@ export default function App() {
     setEditingProjectId(null);
   }
 
-  function addHistoryRecord(record: HistoryRecord) {
+  async function addHistoryRecord(record: HistoryRecord) {
+    if (isRemoteMode && home && session) {
+      await saveRemoteHistoryRecord({ homeId: home.id, record, userId: session.user.id });
+    }
+
     setHistoryRecords((currentRecords) => [record, ...currentRecords]);
     setIsHistoryModalOpen(false);
   }
 
-  function updateHistoryRecord(record: HistoryRecord) {
+  async function updateHistoryRecord(record: HistoryRecord) {
+    if (isRemoteMode && home && session) {
+      await saveRemoteHistoryRecord({ homeId: home.id, record, userId: session.user.id });
+    }
+
     setHistoryRecords((currentRecords) =>
       currentRecords.map((currentRecord) =>
         currentRecord.id === record.id ? record : currentRecord,
@@ -113,7 +184,11 @@ export default function App() {
     setEditingHistoryRecordId(null);
   }
 
-  function deleteHistoryRecord(recordId: string) {
+  async function deleteHistoryRecord(recordId: string) {
+    if (isRemoteMode) {
+      await deleteRemoteHistoryRecord(recordId);
+    }
+
     setHistoryRecords((currentRecords) =>
       currentRecords.filter((record) => record.id !== recordId),
     );
@@ -163,12 +238,22 @@ export default function App() {
 
         <section className="home-card">
           <span>Current home</span>
-          <strong>Maple Street House</strong>
-          <p>Built 1938 · 2,180 sq ft · Colonial</p>
+          <strong>{home?.name ?? "Maple Street House"}</strong>
+          <p>{formatHomeDetail(home)}</p>
         </section>
       </aside>
 
       <section className="content">
+        {isRemoteMode ? (
+          <div className={remoteDataError ? "sync-banner error" : "sync-banner"} role="status">
+            {remoteDataError
+              ? `Supabase sync issue: ${remoteDataError}`
+              : isRemoteDataLoading
+                ? "Loading your home data from Supabase..."
+                : "Signed in. Changes save to Supabase."}
+          </div>
+        ) : null}
+
         <header className="topbar">
           <div>
             <p className="eyebrow">Today&apos;s plan</p>
@@ -472,4 +557,18 @@ function projectSearchText(project: Project) {
 
 function historySearchText(event: TimelineEvent) {
   return [event.date, event.title, event.detail, event.amount, event.source].join(" ");
+}
+
+function formatHomeDetail(home: HomeRecord | null) {
+  if (!home) {
+    return "Built 1938 · 2,180 sq ft · Colonial";
+  }
+
+  const details = [
+    home.builtYear ? `Built ${home.builtYear}` : null,
+    home.squareFeet ? `${home.squareFeet.toLocaleString()} sq ft` : null,
+    home.style,
+  ].filter(Boolean);
+
+  return details.length ? details.join(" · ") : "Home profile ready for details";
 }

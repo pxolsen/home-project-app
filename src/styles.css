@@ -49,6 +49,104 @@ button:disabled {
   opacity: 0.55;
 }
 
+.auth-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  background:
+    linear-gradient(rgba(244, 242, 237, 0.84), rgba(244, 242, 237, 0.92)),
+    url("https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1800&q=80")
+      center / cover;
+  padding: 24px;
+}
+
+.auth-card {
+  display: grid;
+  width: min(460px, 100%);
+  gap: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 250, 0.96);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.auth-card h1 {
+  margin-bottom: 10px;
+  font-size: clamp(2rem, 6vw, 3rem);
+}
+
+.auth-card p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+}
+
+.auth-form .primary-button,
+.auth-form .secondary-button {
+  width: 100%;
+}
+
+.auth-error,
+.auth-message {
+  border-radius: 8px;
+  margin: 0;
+  padding: 11px 12px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.auth-error {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.auth-message {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.auth-dev-banner,
+.auth-user-bar {
+  position: fixed;
+  z-index: 30;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 250, 0.96);
+  box-shadow: 0 10px 30px rgba(31, 29, 25, 0.1);
+}
+
+.auth-dev-banner {
+  bottom: 16px;
+  color: var(--muted);
+  padding: 10px 12px;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.auth-user-bar {
+  top: 16px;
+  padding: 8px;
+}
+
+.auth-user-bar span {
+  max-width: min(270px, 42vw);
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
@@ -165,6 +263,23 @@ button:disabled {
 
 .content {
   padding: 30px;
+}
+
+.sync-banner {
+  border: 1px solid var(--green-soft);
+  border-radius: 8px;
+  background: var(--green-soft);
+  color: var(--green);
+  margin-bottom: 18px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.sync-banner.error {
+  border-color: var(--red-soft);
+  background: var(--red-soft);
+  color: var(--red);
 }
 
 .topbar {
@@ -864,6 +979,7 @@ h3 {
 
 .modal-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
   padding-top: 4px;
@@ -871,6 +987,16 @@ h3 {
 
 .modal-actions .danger-button {
   margin-right: auto;
+}
+
+.form-error {
+  margin: 0 auto 0 0;
+  border-radius: 8px;
+  background: var(--red-soft);
+  color: var(--red);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 @media (max-width: 1120px) {
@@ -912,6 +1038,20 @@ h3 {
   .content,
   .sidebar {
     padding: 20px;
+  }
+
+  .auth-dev-banner,
+  .auth-user-bar {
+    right: 12px;
+    left: 12px;
+  }
+
+  .auth-user-bar {
+    justify-content: space-between;
+  }
+
+  .auth-user-bar span {
+    max-width: 48vw;
   }
 
   .nav-list,
@@ -982,6 +1122,7 @@ h3 {
   }
 
   .modal-actions {
+    align-items: stretch;
     flex-direction: column-reverse;
   }
 

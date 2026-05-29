@@ -30,7 +30,7 @@ export function ProjectEditorModal({
   heading: string;
   initialProject?: Project;
   onClose: () => void;
-  onSave: (project: Project) => void;
+  onSave: (project: Project) => Promise<void> | void;
   submitLabel: string;
 }) {
   const [form, setForm] = useState<ProjectFormState>(
@@ -42,6 +42,8 @@ export function ProjectEditorModal({
   const [attachments, setAttachments] = useState<AttachmentFormState[]>(
     initialProject ? attachmentsToForm(initialProject.attachments) : [],
   );
+  const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   function updateForm<Field extends keyof ProjectFormState>(
     field: Field,
@@ -104,8 +106,10 @@ export function ProjectEditorModal({
     );
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSaveError("");
+    setIsSaving(true);
 
     const estimate = Number(form.estimate);
     const actual = Number(form.actual);
@@ -131,27 +135,32 @@ export function ProjectEditorModal({
       (contractor) => contractor.id === form.selectedContractorId,
     );
 
-    onSave({
-      id: initialProject?.id ?? crypto.randomUUID(),
-      title: form.title.trim(),
-      category: form.category,
-      priority: form.priority,
-      status: form.status,
-      executionType: form.executionType,
-      estimate: Number.isFinite(estimate) ? estimate : 0,
-      actual: form.actual && Number.isFinite(actual) ? actual : undefined,
-      timing: form.timing.trim() || "Unscheduled",
-      owner:
-        form.executionType === "DIY"
-          ? form.owner.trim() || "DIY"
-          : form.owner.trim() || "Professional",
-      notes: form.notes.trim() || undefined,
-      contractors: savedContractors,
-      selectedContractorId: selectedContractorStillExists
-        ? form.selectedContractorId
-        : undefined,
-      attachments: savedAttachmentsFromForm(attachments),
-    });
+    try {
+      await onSave({
+        id: initialProject?.id ?? crypto.randomUUID(),
+        title: form.title.trim(),
+        category: form.category,
+        priority: form.priority,
+        status: form.status,
+        executionType: form.executionType,
+        estimate: Number.isFinite(estimate) ? estimate : 0,
+        actual: form.actual && Number.isFinite(actual) ? actual : undefined,
+        timing: form.timing.trim() || "Unscheduled",
+        owner:
+          form.executionType === "DIY"
+            ? form.owner.trim() || "DIY"
+            : form.owner.trim() || "Professional",
+        notes: form.notes.trim() || undefined,
+        contractors: savedContractors,
+        selectedContractorId: selectedContractorStillExists
+          ? form.selectedContractorId
+          : undefined,
+        attachments: savedAttachmentsFromForm(attachments),
+      });
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Could not save this project.");
+      setIsSaving(false);
+    }
   }
 
   const showDiyEstimate = form.executionType === "DIY";
@@ -488,12 +497,13 @@ export function ProjectEditorModal({
           />
 
           <div className="modal-actions full-span">
+            {saveError ? <p className="form-error">{saveError}</p> : null}
             <button className="secondary-button" type="button" onClick={onClose}>
               Cancel
             </button>
-            <button className="primary-button" type="submit">
+            <button className="primary-button" disabled={isSaving} type="submit">
               <Plus size={18} aria-hidden="true" />
-              {submitLabel}
+              {isSaving ? "Saving..." : submitLabel}
             </button>
           </div>
         </form>

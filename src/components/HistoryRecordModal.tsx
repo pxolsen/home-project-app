@@ -24,8 +24,8 @@ export function HistoryRecordModal({
   heading: string;
   initialRecord?: HistoryRecord;
   onClose: () => void;
-  onDelete?: () => void;
-  onSave: (record: HistoryRecord) => void;
+  onDelete?: () => Promise<void> | void;
+  onSave: (record: HistoryRecord) => Promise<void> | void;
   submitLabel: string;
 }) {
   const [form, setForm] = useState<HistoryRecordFormState>(
@@ -34,6 +34,9 @@ export function HistoryRecordModal({
   const [attachments, setAttachments] = useState<AttachmentFormState[]>(
     initialRecord ? attachmentsToForm(initialRecord.attachments) : [],
   );
+  const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   function updateForm<Field extends keyof HistoryRecordFormState>(
     field: Field,
@@ -50,22 +53,45 @@ export function HistoryRecordModal({
     });
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSaveError("");
+    setIsSaving(true);
 
     const amount = Number(form.amount);
-    onSave({
-      id: initialRecord?.id ?? crypto.randomUUID(),
-      title: form.title.trim(),
-      category: form.category,
-      completedDate: form.completedDate.trim() || "Date unknown",
-      amount: Number.isFinite(amount) ? amount : 0,
-      executionType: form.executionType,
-      contractor:
-        form.executionType === "Professional" ? form.contractor.trim() : "",
-      notes: form.notes.trim() || undefined,
-      attachments: savedAttachmentsFromForm(attachments),
-    });
+    try {
+      await onSave({
+        id: initialRecord?.id ?? crypto.randomUUID(),
+        title: form.title.trim(),
+        category: form.category,
+        completedDate: form.completedDate.trim() || "Date unknown",
+        amount: Number.isFinite(amount) ? amount : 0,
+        executionType: form.executionType,
+        contractor:
+          form.executionType === "Professional" ? form.contractor.trim() : "",
+        notes: form.notes.trim() || undefined,
+        attachments: savedAttachmentsFromForm(attachments),
+      });
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Could not save this record.");
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!onDelete) {
+      return;
+    }
+
+    setSaveError("");
+    setIsDeleting(true);
+
+    try {
+      await onDelete();
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Could not delete this record.");
+      setIsDeleting(false);
+    }
   }
 
   return (
@@ -194,17 +220,23 @@ export function HistoryRecordModal({
           />
 
           <div className="modal-actions full-span">
+            {saveError ? <p className="form-error">{saveError}</p> : null}
             {onDelete ? (
-              <button className="danger-button" type="button" onClick={onDelete}>
-                Delete record
+              <button
+                className="danger-button"
+                disabled={isDeleting || isSaving}
+                type="button"
+                onClick={handleDelete}
+              >
+                {isDeleting ? "Deleting..." : "Delete record"}
               </button>
             ) : null}
             <button className="secondary-button" type="button" onClick={onClose}>
               Cancel
             </button>
-            <button className="primary-button" type="submit">
+            <button className="primary-button" disabled={isSaving || isDeleting} type="submit">
               <Plus size={18} aria-hidden="true" />
-              {submitLabel}
+              {isSaving ? "Saving..." : submitLabel}
             </button>
           </div>
         </form>
