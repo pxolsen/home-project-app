@@ -44,6 +44,11 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
@@ -241,7 +246,8 @@ h3 {
 }
 
 .secondary-button,
-.icon-button {
+.icon-button,
+.danger-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -256,6 +262,20 @@ h3 {
   gap: 8px;
   min-height: 42px;
   padding: 0 16px;
+}
+
+.danger-button {
+  min-height: 42px;
+  border-color: var(--red-soft);
+  background: var(--red-soft);
+  color: var(--red);
+  padding: 0 16px;
+}
+
+.compact-button {
+  min-height: 38px;
+  padding: 0 12px;
+  white-space: nowrap;
 }
 
 .text-button {
@@ -369,16 +389,49 @@ h3 {
   gap: 10px;
 }
 
+.empty-state {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 14px;
+}
+
+.empty-state p,
+.search-summary {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.search-summary {
+  margin-top: 18px;
+  text-align: right;
+}
+
 .project-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+  width: 100%;
   min-height: 78px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface-strong);
+  color: var(--ink);
   padding: 13px;
+  text-align: left;
+}
+
+.project-row:hover {
+  border-color: rgba(47, 107, 79, 0.45);
+  box-shadow: 0 10px 24px rgba(31, 29, 25, 0.07);
+}
+
+.project-row:focus-visible {
+  outline: 3px solid rgba(47, 107, 79, 0.22);
+  outline-offset: 2px;
 }
 
 .project-main {
@@ -472,13 +525,28 @@ h3 {
   grid-template-columns: 74px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: start;
+  width: 100%;
+  border: 0;
   border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
   padding-top: 14px;
+  text-align: left;
 }
 
 .timeline-item:first-child {
   border-top: 0;
   padding-top: 0;
+}
+
+.timeline-item:hover h3 {
+  color: var(--green);
+}
+
+.timeline-item:focus-visible {
+  border-radius: 8px;
+  outline: 3px solid rgba(47, 107, 79, 0.22);
+  outline-offset: 3px;
 }
 
 .timeline-item > span,
@@ -632,12 +700,15 @@ h3 {
 
 .choice small,
 .contractor-heading p,
-.empty-contractors p {
+.attachment-heading p,
+.empty-contractors p,
+.empty-attachments p {
   color: var(--muted);
   line-height: 1.4;
 }
 
-.contractor-section {
+.contractor-section,
+.attachment-section {
   display: grid;
   gap: 12px;
   border: 1px solid var(--line);
@@ -647,7 +718,9 @@ h3 {
 }
 
 .contractor-heading,
-.contractor-card-heading {
+.contractor-card-heading,
+.attachment-heading,
+.attachment-card-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -655,21 +728,26 @@ h3 {
 }
 
 .contractor-heading h3,
-.contractor-card-heading strong {
+.contractor-card-heading strong,
+.attachment-heading h3,
+.attachment-card-heading strong {
   margin: 0;
 }
 
-.contractor-heading p {
+.contractor-heading p,
+.attachment-heading p {
   margin: 4px 0 0;
   font-size: 0.88rem;
 }
 
-.contractor-list {
+.contractor-list,
+.attachment-list {
   display: grid;
   gap: 10px;
 }
 
-.contractor-form-card {
+.contractor-form-card,
+.attachment-card {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
@@ -679,18 +757,103 @@ h3 {
   padding: 14px;
 }
 
-.contractor-card-heading {
+.contractor-summary-row,
+.attachment-summary-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1.2fr) minmax(110px, 0.6fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 0;
+  text-align: left;
+}
+
+.attachment-summary-row {
+  grid-template-columns: 24px minmax(0, 1fr) minmax(90px, auto);
+}
+
+.contractor-summary-row strong,
+.contractor-summary-row span,
+.attachment-summary-row strong,
+.attachment-summary-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.contractor-summary-row span,
+.attachment-summary-row span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.contractor-summary-row span:first-of-type {
+  color: var(--green);
+  font-weight: 800;
+}
+
+.contractor-expanded {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.attachment-expanded {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.attachment-expanded p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.contractor-expanded p {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
+}
+
+.contractor-expanded strong {
+  font-size: 0.84rem;
+}
+
+.contractor-expanded span {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.contractor-card-heading,
+.attachment-card-heading {
   grid-column: 1 / -1;
 }
 
-.empty-contractors {
+.contractor-draft-actions,
+.attachment-draft-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.empty-contractors,
+.empty-attachments {
   border: 1px dashed var(--line);
   border-radius: 8px;
   background: var(--surface-strong);
   padding: 14px;
 }
 
-.empty-contractors p {
+.empty-contractors p,
+.empty-attachments p {
   margin-bottom: 0;
   font-size: 0.9rem;
 }
@@ -704,6 +867,10 @@ h3 {
   justify-content: flex-end;
   gap: 10px;
   padding-top: 4px;
+}
+
+.modal-actions .danger-button {
+  margin-right: auto;
 }
 
 @media (max-width: 1120px) {
@@ -796,15 +963,21 @@ h3 {
   }
 
   .choice-field,
-  .contractor-form-card {
+  .contractor-form-card,
+  .attachment-card,
+  .contractor-summary-row,
+  .attachment-summary-row,
+  .contractor-expanded p {
     grid-template-columns: 1fr;
   }
 
-  .contractor-heading {
+  .contractor-heading,
+  .attachment-heading {
     flex-direction: column;
   }
 
-  .contractor-heading .secondary-button {
+  .contractor-heading .secondary-button,
+  .attachment-heading .secondary-button {
     width: 100%;
   }
 
@@ -813,7 +986,12 @@ h3 {
   }
 
   .modal-actions .secondary-button,
-  .modal-actions .primary-button {
+  .modal-actions .primary-button,
+  .modal-actions .danger-button {
     width: 100%;
+  }
+
+  .modal-actions .danger-button {
+    margin-right: 0;
   }
 }
